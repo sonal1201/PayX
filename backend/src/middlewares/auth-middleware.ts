@@ -25,6 +25,9 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload & { id: string };
 
     req.userid = decoded.id; // ✅ attach id from JWT payload
+    console.log("JWT id:", decoded.id);
+    console.log("AuthMiddleware userid:", req.userid);
+
 
     next();
   } catch (error) {

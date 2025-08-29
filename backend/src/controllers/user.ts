@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { userModel } from "../models/user";
 import dotenv from "dotenv";
 import { safeParse } from "zod";
+import { Account } from "../models/account-model";
 dotenv.config();
 
 
@@ -36,10 +37,18 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     const createdUser = await userModel.create(result);
+    const userId = createdUser._id;
+
+    await Account.create({
+      userId,
+      balance: 1 + Math.random() * 1000
+    })
+
 
     res.status(200).json({
       message: "user Created Successfully",
       data: { ...createdUser, password: "********" },
+
     });
   } catch (error) {
     console.error("Error in controller:", error);
@@ -76,11 +85,13 @@ export const signInUser = async (req: Request, res: Response) => {
     }
 
     if (finduser!.password !== password) {
-      res.status(400).json({
+      console.log("DB password:", finduser!.password);
+      console.log("User input:", password);
+      return res.status(400).json({
         message: "Password is incorrect",
       });
-      return;
     }
+
 
     const token = jwt.sign(
       { id: finduser!._id.toString() },
@@ -91,7 +102,13 @@ export const signInUser = async (req: Request, res: Response) => {
       message: "User logged in successfully",
       token,
     });
-  } catch (error) { }
+  } catch (error) {
+    res.status(500).json({
+      message: "Invaild network Error",
+      data: error
+    })
+    return;
+  }
 };
 
 export const updateProfile = async (req: Request, res: Response) => {

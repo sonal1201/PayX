@@ -8,6 +8,7 @@ const userVaildator_1 = require("../validator/userVaildator");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = require("../models/user");
 const dotenv_1 = __importDefault(require("dotenv"));
+const account_model_1 = require("../models/account-model");
 dotenv_1.default.config();
 //SignUp user
 const registerUser = async (req, res) => {
@@ -32,6 +33,11 @@ const registerUser = async (req, res) => {
             return;
         }
         const createdUser = await user_1.userModel.create(result);
+        const userId = createdUser._id;
+        await account_model_1.Account.create({
+            userId,
+            balance: 1 + Math.random() * 1000
+        });
         res.status(200).json({
             message: "user Created Successfully",
             data: { ...createdUser, password: "********" },
@@ -66,10 +72,11 @@ const signInUser = async (req, res) => {
             return;
         }
         if (finduser.password !== password) {
-            res.status(400).json({
+            console.log("DB password:", finduser.password);
+            console.log("User input:", password);
+            return res.status(400).json({
                 message: "Password is incorrect",
             });
-            return;
         }
         const token = jsonwebtoken_1.default.sign({ id: finduser._id.toString() }, process.env.JWT_SECRET);
         res.status(200).json({
@@ -77,7 +84,13 @@ const signInUser = async (req, res) => {
             token,
         });
     }
-    catch (error) { }
+    catch (error) {
+        res.status(500).json({
+            message: "Invaild network Error",
+            data: error
+        });
+        return;
+    }
 };
 exports.signInUser = signInUser;
 const updateProfile = async (req, res) => {

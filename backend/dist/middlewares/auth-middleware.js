@@ -16,6 +16,8 @@ async function authMiddleware(req, res, next) {
         const token = authHeader.split(" ")[1]; // Extract token after 'Bearer'
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         req.userid = decoded.id; // ✅ attach id from JWT payload
+        console.log("JWT id:", decoded.id);
+        console.log("AuthMiddleware userid:", req.userid);
         next();
     }
     catch (error) {
